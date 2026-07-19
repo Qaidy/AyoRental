@@ -27,53 +27,8 @@ AyoRental adalah platform all-in-one untuk pencarian, penyewaan, penjualan, dan 
 
 ---
 
-## ⚙️ Cara Setup Mandiri
-
-### 1. Persiapan Database (Supabase)
-
-1. Buat akun gratis dan proyek baru di [supabase.com](https://supabase.com).
-2. Buka **SQL Editor** di dashboard Supabase.
-3. Klik **+ New Query**, tempelkan semua isi dari file `trigger_patch.sql`, lalu klik **Run**.
-4. Pastikan eksekusi berhasil: `Success. No rows returned`.
-
-### 2. Konfigurasi Autentikasi
-
-Agar registrasi akun bisa langsung aktif tanpa konfirmasi email:
-
-1. Buka **Authentication → Providers → Email** di dashboard Supabase.
-2. Matikan toggle **Confirm email**.
-3. Klik **Save**.
-
-### 3. Hubungkan Frontend ke Backend
-
-Buka `index.html` dan ganti kredensial Supabase berikut dengan milik Anda:
-
-```js
-const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
-```
-
-Kredensial dapat ditemukan di **Project Settings → API** pada dashboard Supabase Anda.
-
----
-
-## ☁️ Deploy ke GitHub Pages
-
-1. Buat repositori **Public** baru di GitHub.
-2. Upload file `index.html` dan `README.md` ke repositori.
-3. Buka **Settings → Pages**.
-4. Pada bagian **Build and deployment**:
-   - Source: `Deploy from a branch`
-   - Branch: `main` / `master`, folder: `/ (root)`
-5. Klik **Save**, tunggu 1–2 menit.
-6. Situs Anda akan live di: `https://username.github.io/nama-repo/`
-
----
-
 ## 📄 Lisensi
 
 Didistribusikan di bawah lisensi **MIT**. Bebas digunakan, dipelajari, dan dimodifikasi untuk keperluan portofolio.
 
 ---
-
-Dibuat dengan 💙 oleh tim AyoRental.
