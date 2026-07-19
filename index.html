@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AyoRental - Premium Car Marketplace & Rental</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Tailwind CSS v3 CDN with explicit configuration matching DESIGN.md verbatim -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#0052CC',
+                            background: '#FAFAFA',
+                            surface: '#FFFFFF',
+                            textPrimary: '#0A0F24',
+                            textSecondary: '#5E6C84',
+                            border: '#E2E8F0',
+                            darkBg: '#050B20'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'premium': '0 10px 30px rgba(10, 15, 36, 0.05)',
+                        'hover-card': '0 20px 40px rgba(10, 15, 36, 0.08)',
+                        'accent-glow': '0 10px 20px rgba(0, 82, 204, 0.15)'
+                    },
+                    borderRadius: {
+                        'sm': '4px',
+                        'md': '8px',
+                        'lg': '16px',
+                        'xl': '24px'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FAFAFA;
+            color: #0A0F24;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FAFAFA;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D1D5DB;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9CA3AF;
+        }
+        .smooth-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-brand-border smooth-transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Brand Logo Link -->
+                <div onclick="window.location.hash = '#/'" class="flex items-center gap-2 cursor-pointer select-none">
+                    <div class="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-accent-glow">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-extrabold tracking-tight text-brand-textPrimary">Ayo<span class="text-brand-primary">Rental</span></span>
+                </div>
+
+                <!-- Navigation Mid Links -->
+                <nav class="hidden md:flex items-center gap-8 font-medium text-sm text-brand-textSecondary">
+                    <a href="#/" id="nav-home" class="hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition">Home</a>
+                    <a href="#/browse" id="nav-browse" class="hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition">Browse Cars</a>
+                    <a href="#/dashboard-seller" id="nav-sell" class="hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition">Sell Your Car</a>
+                    <a href="#/" onclick="scrollToSection('financing-banner')" class="hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition">Financing</a>
+                    <a href="#/" onclick="scrollToSection('why-buy-section')" class="hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition">About Us</a>
+                    <a href="#/" onclick="scrollToSection('contact-ribbon')" class="hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition">Contact</a>
+                </nav>
+
+                <!-- Navigation User Utilities -->
+                <div class="flex items-center gap-6">
+                    <button onclick="goToFavorites()" class="relative text-brand-textSecondary hover:text-brand-primary smooth-transition p-2 rounded-full hover:bg-gray-100">
+                        <i class="fa-regular fa-heart text-xl"></i>
+                        <span id="fav-count-badge" class="absolute -top-1 -right-1 bg-brand-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                    
+                    <div id="auth-state-area" class="flex items-center gap-4">
+                        <a href="#/login" class="text-sm font-semibold text-brand-textPrimary hover:text-brand-primary smooth-transition">Sign In</a>
+                        <button onclick="window.location.hash='#/dashboard-seller'" class="bg-brand-primary hover:bg-[#0043a4] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-accent-glow smooth-transition hover:scale-105">
+                            List Your Car
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Mount Point of SPA Router -->
+    <main id="app" class="flex-grow">
+        <!-- Rendered views dynamically -->
+    </main>
+
+    <!-- Global Notification Modal (Menggunakan z-[9999] agar terbebas dari bug tumpukan tombol) -->
+    <div id="alert-modal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0A0F24]/60 backdrop-blur-sm opacity-0 pointer-events-none transition duration-300">
+        <div class="bg-white rounded-2xl max-w-sm w-full mx-4 p-6 shadow-premium border border-brand-border text-center space-y-4 transform scale-95 transition duration-300">
+            <div id="alert-icon" class="w-16 h-16 bg-blue-50 text-brand-primary rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h4 id="alert-title" class="font-extrabold text-brand-textPrimary text-lg">Notifikasi</h4>
+            <p id="alert-message" class="text-sm text-brand-textSecondary leading-relaxed">Operasi diproses dengan aman.</p>
+            <button onclick="closeAlertModal()" class="w-full bg-brand-primary hover:bg-[#0043a4] text-white font-bold py-3 rounded-lg text-sm smooth-transition">
+                Confirm
+            </button>
+        </div>
+    </div>
+
+    <!-- Financing Application Modal Component (Menggunakan z-[9990] agar berada tepat di bawah alert modal) -->
+    <div id="financing-modal" class="fixed inset-0 z-[9990] flex items-center justify-center bg-[#0A0F24]/60 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full mx-4 p-8 border border-brand-border shadow-premium relative transform scale-100 transition duration-300 text-left">
+            <button onclick="closeFinancingModal()" class="absolute top-4 right-4 text-brand-textSecondary hover:text-brand-textPrimary p-2 rounded-full hover:bg-gray-100">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="space-y-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-brand-primary text-xl">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <h3 class="text-2xl font-extrabold text-brand-textPrimary">Instant Pre-Approval Application</h3>
+                <p class="text-sm text-brand-textSecondary leading-relaxed">
+                    Ajukan proses pembiayaan kredit secara online. Sistem kami akan memproses skor kelayakan Anda langsung ke mitra keuangan tepercaya AyoRental.
+                </p>
+                
+                <form id="financing-form" class="space-y-4 pt-2" onsubmit="handleFinancingSubmit(event)">
+                    <input type="hidden" id="finance-car-id" value="">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Nama Lengkap</label>
+                        <input type="text" id="finance-name" required class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Email Aktif</label>
+                            <input type="email" id="finance-email" required class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="name@domain.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Nomor Telepon</label>
+                            <input type="tel" id="finance-phone" required class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="0812xxxxxxxx">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Pendapatan Bulanan (Rupiah/USD)</label>
+                        <input type="number" id="finance-income" required class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="Contoh: 15000000">
+                    </div>
+                    <button type="submit" class="w-full bg-brand-primary hover:bg-[#0043a4] text-white font-extrabold py-3.5 rounded-lg text-sm smooth-transition hover:scale-105 shadow-accent-glow">
+                        Ajukan Sekarang
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="bg-brand-darkBg text-white py-16 border-t border-blue-900/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 text-left">
+                
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-2xl font-extrabold tracking-tight">Ayo<span class="text-brand-primary">Rental</span></span>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed max-w-sm">
+                        Platform premium terpercaya untuk menemukan, membeli, menyewa, dan mengajukan aplikasi pembiayaan kendaraan impian Anda dengan standar kualitas tertinggi.
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-8 h-8 rounded-full bg-white/10 hover:bg-brand-primary flex items-center justify-center smooth-transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-white/10 hover:bg-brand-primary flex items-center justify-center smooth-transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-white/10 hover:bg-brand-primary flex items-center justify-center smooth-transition"><i class="fa-brands fa-twitter text-sm"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-white/10 hover:bg-brand-primary flex items-center justify-center smooth-transition"><i class="fa-brands fa-linkedin-in text-sm"></i></a>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <h4 class="text-base font-extrabold tracking-wider">Buy & Rent</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#/browse" class="hover:text-brand-primary transition">All Cars</a></li>
+                        <li><a href="#/browse" class="hover:text-brand-primary transition">New Arrivals</a></li>
+                        <li><a href="#/browse" class="hover:text-brand-primary transition">Premium Cars</a></li>
+                        <li><a href="#/browse" class="hover:text-brand-primary transition">Certified Pre-Owned</a></li>
+                    </ul>
+                </div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <h4 class="text-base font-extrabold tracking-wider">Sell Your Car</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#/dashboard-seller" class="hover:text-brand-primary transition">How It Works</a></li>
+                        <li><a href="#/dashboard-seller" class="hover:text-brand-primary transition">Get an Instant Offer</a></li>
+                        <li><a href="#/dashboard-seller" class="hover:text-brand-primary transition">Sell My Car</a></li>
+                    </ul>
+                </div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <h4 class="text-base font-extrabold tracking-wider">Financing</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#/" class="hover:text-brand-primary transition">Financing Options</a></li>
+                        <li><a href="#/" class="hover:text-brand-primary transition">Credit Application</a></li>
+                        <li><a href="#/" class="hover:text-brand-primary transition">Payment Calculator</a></li>
+                    </ul>
+                </div>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <h4 class="text-base font-extrabold tracking-wider">Company</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#/" class="hover:text-brand-primary transition">About Us</a></li>
+                        <li><a href="#/" class="hover:text-brand-primary transition">Our Team</a></li>
+                        <li><a href="#/" class="hover:text-brand-primary transition">Careers</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-blue-900/30 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400 gap-4">
+                <p>&copy; 2026 AyoRental. All rights reserved.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:text-brand-primary">Privacy Policy</a>
+                    <a href="#" class="hover:text-brand-primary">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core App Logic & Supabase Integrations -->
+    <script>
+        // Supabase Real Credentials Configuration
+        const SUPABASE_URL = "https://femiavcsreumbmuhaegp.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlbWlhdmNzcmV1bWJtdWhhZWdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTY5NDMsImV4cCI6MjA5OTk3Mjk0M30.K6-hFKQ0EuaK9rGEjTAP7aXwgUhbs-tLJCljVJ23Cfw";
+        
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global States
+        let currentUser = null;
+        let userProfile = null;
+        let carListings = [];
+        let userFavoritesList = [];
+        
+        // Filter States for Widget on Home Screen
+        let activeFilters = {
+            make: 'All Makes',
+            model: 'All Models',
+            minPrice: 'No Min',
+            maxPrice: 'No Max',
+            year: 'Any Year',
+            location: 'All Locations',
+            bodyType: 'All'
+        };
+
+        // Filter States for Dedicated Browse Screen
+        let browseSearchFilters = {
+            query: '',
+            make: 'All',
+            bodyType: 'All',
+            transmission: 'All',
+            fuel: 'All',
+            maxPrice: 'All',
+            sortBy: 'newest'
+        };
+
+        let searchBoxActiveTab = 'search-tab';
+        let currentTestimonialSlide = 0;
+
+        async function initializeApp() {
+            const { data: { session } } = await db.auth.getSession();
+            currentUser = session ? session.user : null;
+            
+            if (currentUser) {
+                await fetchUserProfile();
+                await fetchUserFavorites();
+            } else {
+                userProfile = null;
+                userFavoritesList = [];
+            }
+            
+            renderAuthStateHeader();
+            await fetchAllCars();
+            router();
+        }
+
+        async function fetchUserProfile() {
+            if (!currentUser) return;
+            const { data, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+            if (!error) {
+                userProfile = data;
+            }
+        }
+
+        async function fetchUserFavorites() {
+            if (!currentUser) return;
+            const { data, error } = await db.from('favorites').select('car_id').eq('user_id', currentUser.id);
+            if (!error) {
+                userFavoritesList = data.map(item => item.car_id);
+                document.getElementById('fav-count-badge').innerText = userFavoritesList.length;
+                document.getElementById('fav-count-badge').classList.remove('hidden');
+            }
+        }
+
+        async function fetchAllCars() {
+            const { data, error } = await db.from('cars').select('*').order('created_at', { ascending: false });
+            if (!error) {
+                carListings = data;
+            }
+        }
+
+        function renderAuthStateHeader() {
+            const container = document.getElementById('auth-state-area');
+            if (currentUser) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 cursor-pointer select-none" onclick="window.location.hash='#/dashboard-seller'">
+                            <img src="${userProfile?.avatar_url || 'https://placehold.co/150x150/0052cc/ffffff?text=U'}" alt="Profile Avatar" class="w-10 h-10 rounded-xl object-cover border-2 border-brand-primary" onerror="this.src='https://placehold.co/150x150/0052cc/ffffff?text=U'">
+                            <div class="hidden sm:block text-left">
+                                <p class="text-xs font-bold text-brand-textPrimary line-clamp-1">${userProfile?.full_name || 'My Profile'}</p>
+                                <p class="text-[10px] text-brand-textSecondary font-semibold">Active Member</p>
+                            </div>
+                        </div>
+                        <button onclick="handleSignOut()" class="text-xs text-red-500 font-bold hover:underline transition">Sign Out</button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <a href="#/login" class="text-sm font-semibold text-brand-textPrimary hover:text-brand-primary smooth-transition">Sign In</a>
+                    <button onclick="window.location.hash='#/dashboard-seller'" class="bg-brand-primary hover:bg-[#0043a4] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-accent-glow smooth-transition hover:scale-105">
+                        List Your Car
+                    </button>
+                `;
+            }
+        }
+
+        async function handleSignOut() {
+            const { error } = await db.auth.signOut();
+            if (error) {
+                showAlertModal("Error", error.message);
+            } else {
+                currentUser = null;
+                userProfile = null;
+                userFavoritesList = [];
+                document.getElementById('fav-count-badge').classList.add('hidden');
+                showAlertModal("Berhasil Sign Out", "Anda berhasil keluar dari sistem akun AyoRental.");
+                renderAuthStateHeader();
+                window.location.hash = '#/';
+                await initializeApp();
+            }
+        }
+
+        // Multi-page Hash Router Logic
+        const routes = {
+            "/": renderHomeView,
+            "/browse": renderBrowseView,
+            "/login": renderLoginView,
+            "/dashboard-seller": renderDashboardSellerView,
+            "/favorites": renderFavoritesView,
+            "/listing": renderListingDetailView
+        };
+
+        function router() {
+            const path = window.location.hash.slice(1) || "/";
+            const baseRoute = "/" + path.split("/")[1];
+            
+            document.getElementById('nav-home').className = "hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition";
+            document.getElementById('nav-browse').className = "hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition";
+            document.getElementById('nav-sell').className = "hover:text-brand-primary border-b-2 border-transparent pb-1 smooth-transition";
+            
+            if (baseRoute === "/") {
+                document.getElementById('nav-home').className = "text-brand-primary border-b-2 border-brand-primary pb-1 font-semibold smooth-transition";
+            } else if (baseRoute === "/browse") {
+                document.getElementById('nav-browse').className = "text-brand-primary border-b-2 border-brand-primary pb-1 font-semibold smooth-transition";
+            } else if (baseRoute === "/dashboard-seller") {
+                document.getElementById('nav-sell').className = "text-brand-primary border-b-2 border-brand-primary pb-1 font-semibold smooth-transition";
+            }
+
+            const renderFunc = routes[baseRoute] || routes[path] || renderNotFoundView;
+            renderFunc(document.getElementById("app"), path);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener("hashchange", router);
+        window.onload = initializeApp;
+
+        // UI Helpers
+        function showAlertModal(title, msg) {
+            const modal = document.getElementById('alert-modal');
+            const inner = modal.querySelector('div');
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = msg;
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            inner.classList.remove('scale-95');
+            inner.classList.add('scale-100');
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById('alert-modal');
+            const inner = modal.querySelector('div');
+            
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            inner.classList.remove('scale-100');
+            inner.classList.add('scale-95');
+        }
+
+        function openFinancingModal(carId = "") {
+            document.getElementById('finance-car-id').value = carId;
+            document.getElementById('financing-modal').classList.remove('hidden');
+        }
+
+        function closeFinancingModal() {
+            document.getElementById('financing-modal').classList.add('hidden');
+        }
+
+        function scrollToSection(id) {
+            const elem = document.getElementById(id);
+            if (elem) {
+                elem.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function goToFavorites() {
+            if (!currentUser) {
+                showAlertModal("Akses Dibatasi", "Silakan Sign In terlebih dahulu untuk melihat daftar mobil favorit Anda.");
+                window.location.hash = "#/login";
+            } else {
+                window.location.hash = "#/favorites";
+            }
+        }
+
+        // RENDER VIEW: HOME PAGE
+        async function renderHomeView(appContainer) {
+            appContainer.innerHTML = `
+                <!-- Hero Block -->
+                <section class="relative bg-gradient-to-b from-white to-gray-50 pt-12 pb-24 lg:pt-16 lg:pb-32 overflow-hidden border-b border-brand-border">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                            
+                            <!-- Left: Heading and description -->
+                            <div class="lg:col-span-5 space-y-6 z-10 text-left">
+                                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-textPrimary leading-tight tracking-tight">
+                                    Find Your Perfect Car <br>Drive Your <span class="text-brand-primary relative">Dreams</span>
+                                </h1>
+                                <p class="text-brand-textSecondary text-base sm:text-lg leading-relaxed max-w-lg">
+                                    Jelajahi ribuan opsi kendaraan premium terverifikasi langsung dari dealer dan pemilik resmi di kota Anda. Suku bunga rendah. Transaksi instan aman bersama AyoRental.
+                                </p>
+                                <div class="flex flex-wrap gap-4 pt-2">
+                                    <button onclick="window.location.hash='#/browse'" class="bg-brand-primary hover:bg-[#0043a4] text-white font-bold px-6 py-3.5 rounded-lg text-sm smooth-transition hover:scale-105 shadow-accent-glow">
+                                        Browse Cars
+                                    </button>
+                                    <button onclick="window.location.hash='#/dashboard-seller'" class="border border-brand-border bg-white text-brand-textPrimary hover:bg-gray-50 font-bold px-6 py-3.5 rounded-lg text-sm smooth-transition hover:scale-105">
+                                        Sell Your Car
+                                    </button>
+                                </div>
+
+                                <!-- Trust Stats Banner Ribbon -->
+                                <div class="grid grid-cols-3 gap-4 pt-10 border-t border-gray-100">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-3 bg-blue-50 text-brand-primary rounded-xl">
+                                            <i class="fa-solid fa-car text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-brand-textPrimary text-base">10,000+</h4>
+                                            <p class="text-xs text-brand-textSecondary font-medium">Cars Listed</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-3 bg-blue-50 text-brand-primary rounded-xl">
+                                            <i class="fa-solid fa-shield-halved text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-brand-textPrimary text-base">Trusted</h4>
+                                            <p class="text-xs text-brand-textSecondary font-medium">Verified Sellers</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-3 bg-blue-50 text-brand-primary rounded-xl">
+                                            <i class="fa-solid fa-tags text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-brand-textPrimary text-base">Best Deals</h4>
+                                            <p class="text-xs text-brand-textSecondary font-medium">Market Optimized</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Visual image elements composition -->
+                            <div class="lg:col-span-7 relative flex justify-center items-center">
+                                <div class="absolute w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl -z-10 -right-20"></div>
+                                <div class="relative w-full max-w-[640px] h-[340px] flex items-center justify-center">
+                                    <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400" 
+                                         alt="Premium SUV" 
+                                         class="absolute left-0 top-10 w-[240px] rounded-2xl shadow-xl border-4 border-white transform -rotate-6 z-10 object-cover h-[150px] smooth-transition"
+                                         onerror="this.src='https://placehold.co/400x300/e2e8f0/0f172a?text=Premium+SUV'">
+                                         
+                                    <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=500" 
+                                         alt="BMW Sedan" 
+                                         class="absolute w-[320px] rounded-2xl shadow-2xl border-4 border-white z-20 object-cover h-[190px] hover:scale-105 smooth-transition"
+                                         onerror="this.src='https://placehold.co/500x350/0052cc/ffffff?text=BMW+Sedan'">
+
+                                    <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=400" 
+                                         alt="Audi Sedan" 
+                                         class="absolute right-0 bottom-6 w-[220px] rounded-2xl shadow-xl border-4 border-white transform rotate-3 z-10 object-cover h-[140px] smooth-transition"
+                                         onerror="this.src='https://placehold.co/400x300/e2e8f0/0f172a?text=Audi+Sedan'">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Overlapping Smart Widget Filter Container -->
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-30">
+                        <div class="bg-white rounded-2xl shadow-premium border border-brand-border p-6 md:p-8">
+                            
+                            <!-- Widget Header Tabs -->
+                            <div class="flex flex-wrap gap-2 border-b border-gray-100 pb-4 mb-6 select-none">
+                                <button onclick="toggleWidgetTab('search-tab')" id="btn-search-tab" class="px-5 py-3 rounded-lg text-sm font-bold flex items-center gap-2 smooth-transition bg-brand-primary text-white shadow-accent-glow">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Search Cars
+                                </button>
+                                <button onclick="toggleWidgetTab('body-tab')" id="btn-body-tab" class="px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 smooth-transition text-brand-textSecondary hover:text-brand-primary hover:bg-blue-50/50">
+                                    <i class="fa-solid fa-car-side"></i> Body Type
+                                </button>
+                            </div>
+
+                            <!-- Render Content based on state tab selected -->
+                            <div id="widget-tab-content-area">
+                                <!-- Default loaded form will render here -->
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Featured Listings Section -->
+                <section id="featured-section" class="py-20 bg-white">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex items-center justify-between mb-12">
+                            <div class="text-left">
+                                <h2 class="text-3xl font-extrabold text-brand-textPrimary tracking-tight">Featured Listings</h2>
+                                <p id="listing-counter-label" class="text-brand-textSecondary text-sm mt-1">Saring atau pilih filter untuk menemukan mobil premium Anda</p>
+                            </div>
+                            <a href="#/browse" class="text-brand-primary font-bold text-sm hover:underline flex items-center gap-1.5 transition">
+                                View All Vehicles <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </a>
+                        </div>
+
+                        <!-- Grid Listings Container -->
+                        <div id="cars-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                            <!-- Dynamic items loaded here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Split Section: Browse by Brand & Browse by Category -->
+                <section class="py-16 bg-gray-50 border-t border-b border-brand-border">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            
+                            <!-- Left Panel: Browse by Brand -->
+                            <div class="lg:col-span-6 bg-white border border-brand-border rounded-2xl p-8 shadow-premium text-left">
+                                <div class="mb-6">
+                                    <h3 class="text-2xl font-extrabold text-brand-textPrimary">Browse by Brand</h3>
+                                    <p class="text-brand-textSecondary text-sm">Temukan model dari brand otomotif terkemuka instan</p>
+                                </div>
+                                <div class="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                                    <div onclick="selectBrandFilter('Toyota')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-circle-notch"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">Toyota</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('Honda')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-h"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">Honda</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('BMW')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-ring"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">BMW</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('Mercedes-Benz')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-shield"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">Mercedes</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('Audi')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-shapes"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">Audi</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('Chevrolet')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-plus-minus"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">Chevrolet</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('Nissan')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-n"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">Nissan</span>
+                                    </div>
+                                    <div onclick="selectBrandFilter('Volkswagen')" class="flex flex-col items-center justify-center p-4 border border-brand-border rounded-xl cursor-pointer hover:border-brand-primary hover:bg-blue-50/20 smooth-transition">
+                                        <span class="text-xl font-bold mb-1"><i class="fa-solid fa-w"></i></span>
+                                        <span class="text-xs font-bold text-brand-textPrimary">VW</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel: Browse by Category -->
+                            <div class="lg:col-span-6 bg-brand-primary text-white rounded-2xl p-8 shadow-premium text-left flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-2xl font-extrabold">Browse by Category</h3>
+                                    <p class="text-blue-100 text-sm mt-1">Eksplorasi bentuk bodi mobil premium fungsional Anda</p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3 my-6">
+                                    <div onclick="selectCategoryFilter('SUV')" class="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-3 text-center cursor-pointer smooth-transition">
+                                        <div class="text-xl mb-1"><i class="fa-solid fa-truck-monster"></i></div>
+                                        <span class="text-xs font-bold">SUV</span>
+                                    </div>
+                                    <div onclick="selectCategoryFilter('Sedan')" class="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-3 text-center cursor-pointer smooth-transition">
+                                        <div class="text-xl mb-1"><i class="fa-solid fa-car"></i></div>
+                                        <span class="text-xs font-bold">Sedan</span>
+                                    </div>
+                                    <div onclick="selectCategoryFilter('Truck')" class="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-3 text-center cursor-pointer smooth-transition">
+                                        <div class="text-xl mb-1"><i class="fa-solid fa-truck-pickup"></i></div>
+                                        <span class="text-xs font-bold">Truck</span>
+                                    </div>
+                                    <div onclick="selectCategoryFilter('Coupe')" class="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-3 text-center cursor-pointer smooth-transition">
+                                        <div class="text-xl mb-1"><i class="fa-solid fa-car-side"></i></div>
+                                        <span class="text-xs font-bold">Coupe</span>
+                                    </div>
+                                    <div onclick="selectCategoryFilter('Hatchback')" class="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-3 text-center cursor-pointer smooth-transition">
+                                        <div class="text-xl mb-1"><i class="fa-solid fa-car-tunnel"></i></div>
+                                        <span class="text-xs font-bold">Hatchback</span>
+                                    </div>
+                                    <div onclick="selectCategoryFilter('Convertible')" class="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-3 text-center cursor-pointer smooth-transition">
+                                        <div class="text-xl mb-1"><i class="fa-solid fa-car-rear"></i></div>
+                                        <span class="text-xs font-bold">Convertible</span>
+                                    </div>
+                                </div>
+                                <button onclick="resetHomeFilters()" class="w-full bg-white text-brand-primary hover:bg-gray-100 font-extrabold py-3 px-6 rounded-lg text-sm smooth-transition">
+                                    View All Categories / Reset
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Why Buy with AyoRental -->
+                <section id="why-buy-section" class="py-20 bg-white">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <h2 class="text-3xl font-extrabold text-brand-textPrimary tracking-tight">Why Buy/Rent With AyoRental?</h2>
+                        <p class="text-brand-textSecondary text-sm mt-1 max-w-xl mx-auto">Kami berdedikasi tinggi dalam memberikan perlindungan dan efisiensi biaya maksimal.</p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-6 mt-12">
+                            <div class="border border-brand-border rounded-2xl p-6 hover:shadow-premium smooth-transition text-left space-y-4">
+                                <div class="w-12 h-12 bg-blue-50 text-brand-primary rounded-xl flex items-center justify-center"><i class="fa-solid fa-circle-check text-xl"></i></div>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base">Verified Listings</h3>
+                                <p class="text-xs text-brand-textSecondary leading-relaxed">Semua mobil telah diinspeksi ahli demi keamanan mutlak Anda.</p>
+                            </div>
+                            <div class="border border-brand-border rounded-2xl p-6 hover:shadow-premium smooth-transition text-left space-y-4">
+                                <div class="w-12 h-12 bg-blue-50 text-brand-primary rounded-xl flex items-center justify-center"><i class="fa-solid fa-tags text-xl"></i></div>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base">Best Price Guarantee</h3>
+                                <p class="text-xs text-brand-textSecondary leading-relaxed">Harga transparan berbasis valuasi pasar tanpa biaya tersembunyi.</p>
+                            </div>
+                            <div class="border border-brand-border rounded-2xl p-6 hover:shadow-premium smooth-transition text-left space-y-4">
+                                <div class="w-12 h-12 bg-blue-50 text-brand-primary rounded-xl flex items-center justify-center"><i class="fa-solid fa-lock-open text-xl"></i></div>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base">Secure Transactions</h3>
+                                <p class="text-xs text-brand-textSecondary leading-relaxed">Escrow terjamin, penyerahan unit dipandu hukum secara sah.</p>
+                            </div>
+                            <div class="border border-brand-border rounded-2xl p-6 hover:shadow-premium smooth-transition text-left space-y-4">
+                                <div class="w-12 h-12 bg-blue-50 text-brand-primary rounded-xl flex items-center justify-center"><i class="fa-solid fa-calculator text-xl"></i></div>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base">Easy Financing</h3>
+                                <p class="text-xs text-brand-textSecondary leading-relaxed">Skema bunga bersahabat dengan proses persetujuan online instan.</p>
+                            </div>
+                            <div class="border border-brand-border rounded-2xl p-6 hover:shadow-premium smooth-transition text-left space-y-4">
+                                <div class="w-12 h-12 bg-blue-50 text-brand-primary rounded-xl flex items-center justify-center"><i class="fa-solid fa-headset text-xl"></i></div>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base">24/7 Support</h3>
+                                <p class="text-xs text-brand-textSecondary leading-relaxed">Layanan asisten personal setia menemani kendala administratif.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Testimonials -->
+                <section class="py-20 bg-gray-50 border-t border-brand-border overflow-hidden">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <h2 class="text-3xl font-extrabold text-brand-textPrimary tracking-tight">What Our Customers Say</h2>
+                        <p class="text-brand-textSecondary text-sm mt-1 mb-12">Cerita sukses dan ulasan jujur dari pembeli terverifikasi kami</p>
+
+                        <div class="relative max-w-4xl mx-auto">
+                            <div class="overflow-hidden">
+                                <div id="testimonial-carousel" class="flex transition-transform duration-500 ease-in-out" style="transform: translateX(0%);">
+                                    
+                                    <!-- Slide 1 -->
+                                    <div class="min-w-full px-4 flex-shrink-0">
+                                        <div class="bg-white border border-brand-border rounded-2xl p-8 shadow-premium text-left space-y-4">
+                                            <div class="flex text-yellow-400 gap-1">
+                                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <p class="text-sm italic text-brand-textPrimary leading-relaxed">
+                                                "Sangat puas menyewa mobil di AyoRental. Kondisi unit mobil sangat terawat dan proses pencarian menggunakan filter tabnya sangat membantu mempercepat keputusan saya!"
+                                            </p>
+                                            <div class="flex items-center gap-3 pt-2">
+                                                <img class="w-12 h-12 rounded-full object-cover" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150" alt="Michael T.">
+                                                <div>
+                                                    <h4 class="font-bold text-brand-textPrimary text-sm">Michael T.</h4>
+                                                    <p class="text-xs text-brand-textSecondary font-medium">New York, NY</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Slide 2 -->
+                                    <div class="min-w-full px-4 flex-shrink-0">
+                                        <div class="bg-white border border-brand-border rounded-2xl p-8 shadow-premium text-left space-y-4">
+                                            <div class="flex text-yellow-400 gap-1">
+                                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <p class="text-sm italic text-brand-textPrimary leading-relaxed">
+                                                "Platform ini luar biasa transparan. Tim sales support selalu menjawab telepon saya bahkan di akhir pekan. Proses pre-approval kreditnya selesai kurang dari satu jam."
+                                            </p>
+                                            <div class="flex items-center gap-3 pt-2">
+                                                <img class="w-12 h-12 rounded-full object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" alt="Sarah L.">
+                                                <div>
+                                                    <h4 class="font-bold text-brand-textPrimary text-sm">Sarah L.</h4>
+                                                    <p class="text-xs text-brand-textSecondary font-medium">Los Angeles, CA</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Carousel Buttons -->
+                            <button onclick="slideTestimonial(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 lg:-ml-12 bg-white border border-brand-border text-brand-textPrimary hover:text-brand-primary p-3 rounded-full shadow-premium hover:bg-gray-50 smooth-transition">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button onclick="slideTestimonial(1)" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 lg:-mr-12 bg-white border border-brand-border text-brand-textPrimary hover:text-brand-primary p-3 rounded-full shadow-premium hover:bg-gray-50 smooth-transition">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Financing Call-to-Action Banner -->
+                <section id="financing-banner" class="py-16 bg-white">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="relative bg-gradient-to-r from-brand-primary to-blue-900 rounded-3xl overflow-hidden shadow-premium p-8 md:p-16 text-left text-white flex flex-col md:flex-row justify-between items-center gap-8">
+                            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/40 to-transparent pointer-events-none"></div>
+                            <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-white/5 rounded-full blur-2xl"></div>
+
+                            <div class="space-y-4 max-w-xl z-10">
+                                <span class="text-xs font-bold uppercase tracking-wider text-blue-100">Financing Made Simple</span>
+                                <h2 class="text-3xl sm:text-4xl font-extrabold leading-tight">Get Behind the Wheel Today</h2>
+                                <p class="text-sm text-blue-100 leading-relaxed font-light">
+                                    Hitung cicilan bulanan ringan Anda secara langsung dan peroleh persetujuan awal (pre-approval) instan online sekarang juga bersama AyoRental.
+                                </p>
+                            </div>
+
+                            <div class="z-10 flex-shrink-0">
+                                <button onclick="openFinancingModal('')" class="bg-white text-brand-primary hover:bg-gray-100 font-extrabold py-4 px-8 rounded-xl text-sm shadow-premium smooth-transition hover:scale-105">
+                                    Get Pre-Approved
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contact Info Ribbon -->
+                <section id="contact-ribbon" class="py-12 bg-gray-50 border-t border-brand-border">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
+                            <div>
+                                <h3 class="text-xl font-extrabold text-brand-textPrimary">Ready to Get Started?</h3>
+                                <p class="text-brand-textSecondary text-xs mt-0.5">Asisten profesional AyoRental siap memandu langkah transaksi pembelian/penyewaan mobil Anda.</p>
+                            </div>
+
+                            <div class="flex flex-wrap justify-center gap-6 md:gap-12 text-sm">
+                                <a href="tel:1234567" class="flex items-center gap-3 hover:text-brand-primary smooth-transition">
+                                    <div class="p-3 bg-white border border-brand-border rounded-xl text-brand-primary"><i class="fa-solid fa-phone"></i></div>
+                                    <div>
+                                        <p class="text-xs text-brand-textSecondary font-bold">Call Us</p>
+                                        <p class="font-extrabold text-brand-textPrimary">(888) 123-4567</p>
+                                    </div>
+                                </a>
+                                <a href="mailto:hello@ayorental.com" class="flex items-center gap-3 hover:text-brand-primary smooth-transition">
+                                    <div class="p-3 bg-white border border-brand-border rounded-xl text-brand-primary"><i class="fa-solid fa-envelope"></i></div>
+                                    <div>
+                                        <p class="text-xs text-brand-textSecondary font-bold">Email Us</p>
+                                        <p class="font-extrabold text-brand-textPrimary">hello@ayorental.com</p>
+                                    </div>
+                                </a>
+                                <div class="flex items-center gap-3">
+                                    <div class="p-3 bg-white border border-brand-border rounded-xl text-brand-primary"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div>
+                                        <p class="text-xs text-brand-textSecondary font-bold">Visit Store</p>
+                                        <p class="font-extrabold text-brand-textPrimary">123 Auto Drive, Suite 100, NY</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+
+            renderWidgetTabContent();
+            renderCarsGrid();
+        }
+
+        function toggleWidgetTab(tabId) {
+            searchBoxActiveTab = tabId;
+            const btnSearch = document.getElementById('btn-search-tab');
+            const btnBody = document.getElementById('btn-body-tab');
+
+            if (tabId === 'search-tab') {
+                btnSearch.className = "px-5 py-3 rounded-lg text-sm font-bold flex items-center gap-2 smooth-transition bg-brand-primary text-white shadow-accent-glow";
+                btnBody.className = "px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 smooth-transition text-brand-textSecondary hover:text-brand-primary hover:bg-blue-50/50";
+            } else {
+                btnBody.className = "px-5 py-3 rounded-lg text-sm font-bold flex items-center gap-2 smooth-transition bg-brand-primary text-white shadow-accent-glow";
+                btnSearch.className = "px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 smooth-transition text-brand-textSecondary hover:text-brand-primary hover:bg-blue-50/50";
+            }
+
+            renderWidgetTabContent();
+        }
+
+        function renderWidgetTabContent() {
+            const container = document.getElementById('widget-tab-content-area');
+            if (searchBoxActiveTab === 'search-tab') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                        
+                        <!-- Dropdown Make -->
+                        <div class="space-y-1 text-left">
+                            <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Make</label>
+                            <div class="relative">
+                                <select id="filter-make" onchange="applyWidgetFilter('make', this.value)" class="w-full bg-gray-50 border border-brand-border rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer">
+                                    <option ${activeFilters.make === 'All Makes' ? 'selected' : ''}>All Makes</option>
+                                    <option ${activeFilters.make === 'BMW' ? 'selected' : ''}>BMW</option>
+                                    <option ${activeFilters.make === 'Mercedes-Benz' ? 'selected' : ''}>Mercedes-Benz</option>
+                                    <option ${activeFilters.make === 'Toyota' ? 'selected' : ''}>Toyota</option>
+                                    <option ${activeFilters.make === 'Honda' ? 'selected' : ''}>Honda</option>
+                                    <option ${activeFilters.make === 'Audi' ? 'selected' : ''}>Audi</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Model -->
+                        <div class="space-y-1 text-left">
+                            <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Model</label>
+                            <div class="relative">
+                                <select id="filter-model" onchange="applyWidgetFilter('model', this.value)" class="w-full bg-gray-50 border border-brand-border rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer">
+                                    <option ${activeFilters.model === 'All Models' ? 'selected' : ''}>All Models</option>
+                                    <option ${activeFilters.model === '330i xDrive Sedan' ? 'selected' : ''}>330i xDrive</option>
+                                    <option ${activeFilters.model === 'C-Class C 300' ? 'selected' : ''}>C-Class</option>
+                                    <option ${activeFilters.model === 'RAV4 XLE AWD SUV' ? 'selected' : ''}>RAV4</option>
+                                    <option ${activeFilters.model === 'Accord Sport 1.5T Sedan' ? 'selected' : ''}>Accord</option>
+                                    <option ${activeFilters.model === 'A4 Premium Plus Sedan' ? 'selected' : ''}>A4</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Min Price -->
+                        <div class="space-y-1 text-left">
+                            <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Min Price</label>
+                            <div class="relative">
+                                <select id="filter-minPrice" onchange="applyWidgetFilter('minPrice', this.value)" class="w-full bg-gray-50 border border-brand-border rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer">
+                                    <option ${activeFilters.minPrice === 'No Min' ? 'selected' : ''}>No Min</option>
+                                    <option ${activeFilters.minPrice === '20000' ? 'selected' : ''}>$20,000</option>
+                                    <option ${activeFilters.minPrice === '24000' ? 'selected' : ''}>$24,000</option>
+                                    <option ${activeFilters.minPrice === '26000' ? 'selected' : ''}>$26,000</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Max Price -->
+                        <div class="space-y-1 text-left">
+                            <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Max Price</label>
+                            <div class="relative">
+                                <select id="filter-maxPrice" onchange="applyWidgetFilter('maxPrice', this.value)" class="w-full bg-gray-50 border border-brand-border rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer">
+                                    <option ${activeFilters.maxPrice === 'No Max' ? 'selected' : ''}>No Max</option>
+                                    <option ${activeFilters.maxPrice === '23000' ? 'selected' : ''}>$23,000</option>
+                                    <option ${activeFilters.maxPrice === '25000' ? 'selected' : ''}>$25,000</option>
+                                    <option ${activeFilters.maxPrice === '28000' ? 'selected' : ''}>$28,000</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Year -->
+                        <div class="space-y-1 text-left">
+                            <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Year From</label>
+                            <div class="relative">
+                                <select id="filter-year" onchange="applyWidgetFilter('year', this.value)" class="w-full bg-gray-50 border border-brand-border rounded-lg p-3 text-sm font-medium focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer">
+                                    <option ${activeFilters.year === 'Any Year' ? 'selected' : ''}>Any Year</option>
+                                    <option ${activeFilters.year === '2020' ? 'selected' : ''}>2020</option>
+                                    <option ${activeFilters.year === '2021' ? 'selected' : ''}>2021</option>
+                                    <option ${activeFilters.year === '2022' ? 'selected' : ''}>2022</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <button onclick="scrollToSection('featured-section')" class="w-full bg-brand-primary hover:bg-[#0043a4] text-white font-bold p-3.5 rounded-lg text-sm flex items-center justify-center gap-2 shadow-accent-glow smooth-transition hover:scale-105">
+                            <i class="fa-solid fa-magnifying-glass"></i> Filter Results
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div onclick="selectCategoryFilter('SUV')" class="border border-brand-border hover:border-brand-primary rounded-xl p-4 text-center cursor-pointer hover:bg-blue-50/30 smooth-transition ${activeFilters.bodyType === 'SUV' ? 'border-brand-primary bg-blue-50/30' : ''}">
+                            <div class="text-3xl text-brand-primary mb-2"><i class="fa-solid fa-truck-monster"></i></div>
+                            <span class="text-sm font-bold text-brand-textPrimary">SUV</span>
+                        </div>
+                        <div onclick="selectCategoryFilter('Sedan')" class="border border-brand-border hover:border-brand-primary rounded-xl p-4 text-center cursor-pointer hover:bg-blue-50/30 smooth-transition ${activeFilters.bodyType === 'Sedan' ? 'border-brand-primary bg-blue-50/30' : ''}">
+                            <div class="text-3xl text-brand-primary mb-2"><i class="fa-solid fa-car"></i></div>
+                            <span class="text-sm font-bold text-brand-textPrimary">Sedan</span>
+                        </div>
+                        <div onclick="selectCategoryFilter('Truck')" class="border border-brand-border hover:border-brand-primary rounded-xl p-4 text-center cursor-pointer hover:bg-blue-50/30 smooth-transition ${activeFilters.bodyType === 'Truck' ? 'border-brand-primary bg-blue-50/30' : ''}">
+                            <div class="text-3xl text-brand-primary mb-2"><i class="fa-solid fa-truck-pickup"></i></div>
+                            <span class="text-sm font-bold text-brand-textPrimary">Truck</span>
+                        </div>
+                        <div onclick="selectCategoryFilter('Coupe')" class="border border-brand-border hover:border-brand-primary rounded-xl p-4 text-center cursor-pointer hover:bg-blue-50/30 smooth-transition ${activeFilters.bodyType === 'Coupe' ? 'border-brand-primary bg-blue-50/30' : ''}">
+                            <div class="text-3xl text-brand-primary mb-2"><i class="fa-solid fa-car-side"></i></div>
+                            <span class="text-sm font-bold text-brand-textPrimary">Coupe</span>
+                        </div>
+                        <div onclick="selectCategoryFilter('Hatchback')" class="border border-brand-border hover:border-brand-primary rounded-xl p-4 text-center cursor-pointer hover:bg-blue-50/30 smooth-transition ${activeFilters.bodyType === 'Hatchback' ? 'border-brand-primary bg-blue-50/30' : ''}">
+                            <div class="text-3xl text-brand-primary mb-2"><i class="fa-solid fa-car-tunnel"></i></div>
+                            <span class="text-sm font-bold text-brand-textPrimary">Hatchback</span>
+                        </div>
+                        <div onclick="selectCategoryFilter('Convertible')" class="border border-brand-border hover:border-brand-primary rounded-xl p-4 text-center cursor-pointer hover:bg-blue-50/30 smooth-transition ${activeFilters.bodyType === 'Convertible' ? 'border-brand-primary bg-blue-50/30' : ''}">
+                            <div class="text-3xl text-brand-primary mb-2"><i class="fa-solid fa-car-rear"></i></div>
+                            <span class="text-sm font-bold text-brand-textPrimary">Convertible</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function applyWidgetFilter(key, val) {
+            activeFilters[key] = val;
+            renderCarsGrid();
+        }
+
+        function selectBrandFilter(brand) {
+            if (window.location.hash.includes("/browse")) {
+                browseSearchFilters.make = brand;
+                renderBrowseResults();
+            } else {
+                activeFilters.make = brand;
+                renderCarsGrid();
+                scrollToSection('featured-section');
+                showAlertModal("Filter Brand", `Menampilkan semua katalog mobil premium ${brand}.`);
+            }
+        }
+
+        function selectCategoryFilter(cat) {
+            if (window.location.hash.includes("/browse")) {
+                browseSearchFilters.bodyType = cat;
+                renderBrowseResults();
+            } else {
+                activeFilters.bodyType = cat;
+                renderCarsGrid();
+                scrollToSection('featured-section');
+                showAlertModal("Filter Kategori", `Berhasil menampilkan tipe bodi: ${cat}.`);
+            }
+        }
+
+        function resetHomeFilters() {
+            activeFilters = {
+                make: 'All Makes',
+                model: 'All Models',
+                minPrice: 'No Min',
+                maxPrice: 'No Max',
+                year: 'Any Year',
+                location: 'All Locations',
+                bodyType: 'All'
+            };
+            renderCarsGrid();
+            renderWidgetTabContent();
+            showAlertModal("Filter Reset", "Semua saringan pencarian mobil dikembalikan ke keadaan default.");
+        }
+
+        function renderCarsGrid() {
+            const grid = document.getElementById('cars-grid-container');
+            const countLabel = document.getElementById('listing-counter-label');
+            if (!grid) return;
+            
+            let filtered = carListings.filter(car => {
+                if (activeFilters.make !== 'All Makes' && car.make !== activeFilters.make) return false;
+                if (activeFilters.model !== 'All Models' && !car.model.toLowerCase().includes(activeFilters.model.split(' ')[0].toLowerCase())) return false;
+                if (activeFilters.minPrice !== 'No Min' && parseFloat(car.price) < parseFloat(activeFilters.minPrice)) return false;
+                if (activeFilters.maxPrice !== 'No Max' && parseFloat(car.price) > parseFloat(activeFilters.maxPrice)) return false;
+                if (activeFilters.year !== 'Any Year' && car.year < parseInt(activeFilters.year)) return false;
+                if (activeFilters.bodyType !== 'All' && car.body_type.toLowerCase() !== activeFilters.bodyType.toLowerCase()) return false;
+                return true;
+            });
+
+            countLabel.innerText = `Ditemukan ${filtered.length} mobil premium dari database kami`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-brand-textSecondary space-y-4">
+                        <div class="text-5xl text-gray-300"><i class="fa-solid fa-car-burst"></i></div>
+                        <h4 class="text-lg font-bold text-brand-textPrimary">Tidak Ada Hasil Cocok</h4>
+                        <p class="text-sm max-w-sm mx-auto">Kami tidak dapat menemukan mobil dengan kecocokan filter Anda saat ini. Silakan reset filter pencarian.</p>
+                        <button onclick="resetHomeFilters()" class="bg-brand-primary text-white font-bold py-2.5 px-6 rounded-lg text-xs smooth-transition">Reset Filters</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Only display first 5 for the Clean Landing page design limit
+            let displayList = filtered.slice(0, 5);
+
+            grid.innerHTML = displayList.map(car => {
+                const isFav = userFavoritesList.includes(car.id);
+                return `
+                    <div class="bg-white rounded-2xl border border-brand-border/80 overflow-hidden shadow-premium hover:shadow-hover-card hover:-translate-y-1.5 smooth-transition text-left flex flex-col justify-between">
+                        <div class="relative cursor-pointer" onclick="window.location.hash='#/listing/${car.id}'">
+                            <img src="${car.image_url}" alt="${car.make} ${car.model}" class="w-full h-44 object-cover" onerror="this.src='https://placehold.co/400x300/e2e8f0/0f172a?text=${car.make}'">
+                            <button onclick="event.stopPropagation(); toggleFavoriteAction('${car.id}')" class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-400 p-2.5 rounded-full shadow-premium smooth-transition hover:scale-110">
+                                <i class="fa-solid fa-heart ${isFav ? 'text-red-500' : ''}"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col justify-between">
+                            <div class="cursor-pointer" onclick="window.location.hash='#/listing/${car.id}'">
+                                <span class="text-xs font-bold text-brand-textSecondary">${car.year} ${car.make}</span>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base mt-0.5 line-clamp-1">${car.model}</h3>
+                                <div class="text-brand-primary font-extrabold text-lg mt-2">$${parseFloat(car.price).toLocaleString()}</div>
+                            </div>
+                            <div class="border-t border-gray-100 pt-3 mt-4 space-y-2 text-xs text-brand-textSecondary font-medium">
+                                <div class="flex justify-between">
+                                    <span><i class="fa-solid fa-gauge-high mr-1"></i> ${parseInt(car.mileage).toLocaleString()} mi</span>
+                                    <span><i class="fa-solid fa-gears mr-1"></i> ${car.transmission}</span>
+                                    <span><i class="fa-solid fa-gas-pump mr-1"></i> ${car.fuel_type}</span>
+                                </div>
+                                <div class="text-gray-400 flex items-center gap-1 text-[11px] mt-1">
+                                    <i class="fa-solid fa-location-dot"></i> ${car.location}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function toggleFavoriteAction(carId) {
+            if (!currentUser) {
+                showAlertModal("Gagal Menambahkan", "Silakan Sign In terlebih dahulu untuk memfavoritkan mobil premium.");
+                window.location.hash = "#/login";
+                return;
+            }
+
+            const idx = userFavoritesList.indexOf(carId);
+            if (idx > -1) {
+                const { error } = await db.from('favorites').delete().eq('user_id', currentUser.id).eq('car_id', carId);
+                if (error) {
+                    showAlertModal("Error", error.message);
+                } else {
+                    userFavoritesList.splice(idx, 1);
+                    showAlertModal("Dihapus", "Mobil premium berhasil dikeluarkan dari daftar favorit Anda.");
+                }
+            } else {
+                const { error } = await db.from('favorites').insert({ user_id: currentUser.id, car_id: carId });
+                if (error) {
+                    showAlertModal("Error", error.message);
+                } else {
+                    userFavoritesList.push(carId);
+                    showAlertModal("Favorit", "Mobil premium berhasil disimpan ke daftar favorit Anda.");
+                }
+            }
+            
+            document.getElementById('fav-count-badge').innerText = userFavoritesList.length;
+            if (userFavoritesList.length > 0) {
+                document.getElementById('fav-count-badge').classList.remove('hidden');
+            } else {
+                document.getElementById('fav-count-badge').classList.add('hidden');
+            }
+            router();
+        }
+
+        function slideTestimonial(dir) {
+            currentTestimonialSlide = (currentTestimonialSlide + dir + 2) % 2;
+            document.getElementById('testimonial-carousel').style.transform = `translateX(-${currentTestimonialSlide * 100}%)`;
+        }
+
+        // RENDER VIEW: NEW DEDICATED BROWSE PAGE
+        async function renderBrowseView(appContainer) {
+            appContainer.innerHTML = `
+                <section class="py-12 bg-gray-50 border-b border-brand-border text-left">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="mb-8">
+                            <h1 class="text-3xl font-extrabold text-brand-textPrimary tracking-tight">Eksplorasi Semua Mobil</h1>
+                            <p class="text-brand-textSecondary text-sm mt-1">Gunakan panel di samping untuk menyaring mobil AyoRental impian Anda secara akurat.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                            
+                            <!-- Left Sidebar Filters panel -->
+                            <div class="bg-white border border-brand-border rounded-2xl p-6 shadow-premium space-y-6">
+                                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                                    <h3 class="font-extrabold text-brand-textPrimary text-base">Filter Pencarian</h3>
+                                    <button onclick="resetBrowseFilters()" class="text-xs text-brand-primary font-bold hover:underline">Reset All</button>
+                                </div>
+
+                                <!-- Text search -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Cari Model / Teks</label>
+                                    <div class="relative">
+                                        <input type="text" id="browse-query" oninput="applyBrowseSearchFilter('query', this.value)" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 pl-9 text-sm outline-none focus:ring-2 focus:ring-brand-primary/20" placeholder="Contoh: BMW, Civic...">
+                                        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+                                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Brand selector -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Merk / Make</label>
+                                    <select onchange="applyBrowseSearchFilter('make', this.value)" id="browse-make" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 text-sm outline-none cursor-pointer">
+                                        <option value="All">Semua Merk</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                        <option value="Toyota">Toyota</option>
+                                        <option value="Honda">Honda</option>
+                                        <option value="Audi">Audi</option>
+                                    </select>
+                                </div>
+
+                                <!-- Body type selector -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Tipe Bodi</label>
+                                    <select onchange="applyBrowseSearchFilter('bodyType', this.value)" id="browse-bodyType" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 text-sm outline-none cursor-pointer">
+                                        <option value="All">Semua Tipe</option>
+                                        <option value="Sedan">Sedan</option>
+                                        <option value="SUV">SUV</option>
+                                        <option value="Truck">Truck</option>
+                                        <option value="Coupe">Coupe</option>
+                                        <option value="Hatchback">Hatchback</option>
+                                        <option value="Convertible">Convertible</option>
+                                    </select>
+                                </div>
+
+                                <!-- Transmission selector -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Transmisi</label>
+                                    <select onchange="applyBrowseSearchFilter('transmission', this.value)" id="browse-transmission" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 text-sm outline-none cursor-pointer">
+                                        <option value="All">Semua Transmisi</option>
+                                        <option value="Auto">Automatic</option>
+                                        <option value="Manual">Manual</option>
+                                    </select>
+                                </div>
+
+                                <!-- Fuel selector -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Bahan Bakar</label>
+                                    <select onchange="applyBrowseSearchFilter('fuel', this.value)" id="browse-fuel" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 text-sm outline-none cursor-pointer">
+                                        <option value="All">Semua Bahan Bakar</option>
+                                        <option value="Gas">Gasoline</option>
+                                        <option value="Electric">Electric</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+
+                                <!-- Max price filter -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Harga Maksimal ($)</label>
+                                    <select onchange="applyBrowseSearchFilter('maxPrice', this.value)" id="browse-maxPrice" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 text-sm outline-none cursor-pointer">
+                                        <option value="All">No Max Limit</option>
+                                        <option value="23000">Di bawah $23,000</option>
+                                        <option value="25000">Di bawah $25,000</option>
+                                        <option value="28000">Di bawah $28,000</option>
+                                    </select>
+                                </div>
+
+                                <!-- Sorting controller -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Urutkan Berdasarkan</label>
+                                    <select onchange="applyBrowseSearchFilter('sortBy', this.value)" id="browse-sortBy" class="w-full bg-gray-50 border border-brand-border rounded-lg p-2.5 text-sm outline-none cursor-pointer">
+                                        <option value="newest">Listing Terbaru</option>
+                                        <option value="price-asc">Harga Terendah</option>
+                                        <option value="price-desc">Harga Tertinggi</option>
+                                        <option value="year-desc">Tahun Terbaru</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Content: Live grid results -->
+                            <div class="lg:col-span-3 space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <p id="browse-counter-label" class="text-brand-textSecondary text-sm font-semibold">Menghitung mobil...</p>
+                                </div>
+
+                                <div id="browse-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <!-- Dynamic items list -->
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+            `;
+
+            // Sync HTML Inputs with existing filter state
+            document.getElementById('browse-query').value = browseSearchFilters.query;
+            document.getElementById('browse-make').value = browseSearchFilters.make;
+            document.getElementById('browse-bodyType').value = browseSearchFilters.bodyType;
+            document.getElementById('browse-transmission').value = browseSearchFilters.transmission;
+            document.getElementById('browse-fuel').value = browseSearchFilters.fuel;
+            document.getElementById('browse-maxPrice').value = browseSearchFilters.maxPrice;
+            document.getElementById('browse-sortBy').value = browseSearchFilters.sortBy;
+
+            await fetchAllCars(); // Refetch to ensure up-to-date data
+            renderBrowseResults();
+        }
+
+        function applyBrowseSearchFilter(key, val) {
+            browseSearchFilters[key] = val;
+            renderBrowseResults();
+        }
+
+        function resetBrowseFilters() {
+            browseSearchFilters = {
+                query: '',
+                make: 'All',
+                bodyType: 'All',
+                transmission: 'All',
+                fuel: 'All',
+                maxPrice: 'All',
+                sortBy: 'newest'
+            };
+            
+            document.getElementById('browse-query').value = '';
+            document.getElementById('browse-make').value = 'All';
+            document.getElementById('browse-bodyType').value = 'All';
+            document.getElementById('browse-transmission').value = 'All';
+            document.getElementById('browse-fuel').value = 'All';
+            document.getElementById('browse-maxPrice').value = 'All';
+            document.getElementById('browse-sortBy').value = 'newest';
+
+            renderBrowseResults();
+            showAlertModal("Filter Reset", "Semua saringan pencarian khusus AyoRental dikosongkan.");
+        }
+
+        function renderBrowseResults() {
+            const grid = document.getElementById('browse-grid-container');
+            const counter = document.getElementById('browse-counter-label');
+            if (!grid) return;
+
+            let filtered = carListings.filter(car => {
+                // Search query match (make / model)
+                if (browseSearchFilters.query !== '') {
+                    const term = browseSearchFilters.query.toLowerCase();
+                    const matchName = `${car.make} ${car.model}`.toLowerCase();
+                    if (!matchName.includes(term)) return false;
+                }
+
+                // Make match
+                if (browseSearchFilters.make !== 'All' && car.make !== browseSearchFilters.make) return false;
+
+                // Body type match
+                if (browseSearchFilters.bodyType !== 'All' && car.body_type.toLowerCase() !== browseSearchFilters.bodyType.toLowerCase()) return false;
+
+                // Transmission match
+                if (browseSearchFilters.transmission !== 'All' && car.transmission.toLowerCase() !== browseSearchFilters.transmission.toLowerCase()) return false;
+
+                // Fuel match
+                if (browseSearchFilters.fuel !== 'All' && car.fuel_type.toLowerCase() !== browseSearchFilters.fuel.toLowerCase()) return false;
+
+                // Max price match
+                if (browseSearchFilters.maxPrice !== 'All') {
+                    if (parseFloat(car.price) > parseFloat(browseSearchFilters.maxPrice)) return false;
+                }
+
+                return true;
+            });
+
+            // Apply Sorting
+            if (browseSearchFilters.sortBy === 'newest') {
+                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else if (browseSearchFilters.sortBy === 'price-asc') {
+                filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            } else if (browseSearchFilters.sortBy === 'price-desc') {
+                filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            } else if (browseSearchFilters.sortBy === 'year-desc') {
+                filtered.sort((a, b) => b.year - a.year);
+            }
+
+            counter.innerText = `Menampilkan ${filtered.length} mobil premium AyoRental cocok`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-brand-textSecondary space-y-4">
+                        <div class="text-5xl text-gray-300"><i class="fa-solid fa-car-burst"></i></div>
+                        <h4 class="text-lg font-bold text-brand-textPrimary">Tidak Menemukan Hasil</h4>
+                        <p class="text-sm max-w-sm mx-auto">Kami tidak dapat menemukan mobil dengan kombinasi pencarian Anda. Coba kosongkan saringan di sisi kiri.</p>
+                        <button onclick="resetBrowseFilters()" class="bg-brand-primary text-white font-bold py-2 px-5 rounded-lg text-xs transition">Kosongkan Filter</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(car => {
+                const isFav = userFavoritesList.includes(car.id);
+                return `
+                    <div class="bg-white rounded-2xl border border-brand-border/80 overflow-hidden shadow-premium hover:shadow-hover-card hover:-translate-y-1.5 smooth-transition text-left flex flex-col justify-between">
+                        <div class="relative cursor-pointer" onclick="window.location.hash='#/listing/${car.id}'">
+                            <img src="${car.image_url}" alt="${car.make} ${car.model}" class="w-full h-44 object-cover" onerror="this.src='https://placehold.co/400x300/e2e8f0/0f172a?text=${car.make}'">
+                            <button onclick="event.stopPropagation(); toggleFavoriteAction('${car.id}')" class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-400 p-2.5 rounded-full shadow-premium smooth-transition hover:scale-110">
+                                <i class="fa-solid fa-heart ${isFav ? 'text-red-500' : ''}"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col justify-between">
+                            <div class="cursor-pointer" onclick="window.location.hash='#/listing/${car.id}'">
+                                <span class="text-xs font-bold text-brand-textSecondary">${car.year} ${car.make}</span>
+                                <h3 class="font-extrabold text-brand-textPrimary text-base mt-0.5 line-clamp-1">${car.model}</h3>
+                                <div class="text-brand-primary font-extrabold text-lg mt-2">$${parseFloat(car.price).toLocaleString()}</div>
+                            </div>
+                            <div class="border-t border-gray-100 pt-3 mt-4 space-y-2 text-xs text-brand-textSecondary font-medium">
+                                <div class="flex justify-between">
+                                    <span><i class="fa-solid fa-gauge-high mr-1"></i> ${parseInt(car.mileage).toLocaleString()} mi</span>
+                                    <span><i class="fa-solid fa-gears mr-1"></i> ${car.transmission}</span>
+                                    <span><i class="fa-solid fa-gas-pump mr-1"></i> ${car.fuel_type}</span>
+                                </div>
+                                <div class="text-gray-400 flex items-center gap-1 text-[11px] mt-1">
+                                    <i class="fa-solid fa-location-dot"></i> ${car.location}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // RENDER VIEW: AUTH LOGIN / SIGN UP
+        function renderLoginView(appContainer) {
+            appContainer.innerHTML = `
+                <section class="py-20 bg-gray-50 flex items-center justify-center min-h-[80vh]">
+                    <div class="max-w-md w-full bg-white rounded-3xl border border-brand-border shadow-premium p-8 mx-4 space-y-6 text-left">
+                        
+                        <!-- Toggle Form Head -->
+                        <div class="flex border-b border-gray-100 pb-4 select-none">
+                            <button onclick="toggleAuthForm('signin')" id="btn-tab-signin" class="w-1/2 text-center pb-2 text-sm font-extrabold border-b-2 border-brand-primary text-brand-primary smooth-transition">Sign In</button>
+                            <button onclick="toggleAuthForm('signup')" id="btn-tab-signup" class="w-1/2 text-center pb-2 text-sm font-semibold text-brand-textSecondary hover:text-brand-primary smooth-transition">Sign Up</button>
+                        </div>
+
+                        <!-- Form Controller -->
+                        <form id="auth-main-form" class="space-y-4 pt-2" onsubmit="handleAuthSubmit(event)">
+                            <div id="signup-fields" class="hidden space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Nama Lengkap</label>
+                                    <input type="text" id="auth-fullname" class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="Masukkan nama lengkap Anda">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Alamat Email</label>
+                                <input type="email" id="auth-email" required class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="name@domain.com">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Kata Sandi</label>
+                                <input type="password" id="auth-password" required class="w-full p-3 bg-gray-50 border border-brand-border rounded-lg text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="Minimal 6 karakter">
+                            </div>
+                            <button type="submit" id="auth-submit-btn" class="w-full bg-brand-primary hover:bg-[#0043a4] text-white font-extrabold py-3.5 rounded-lg text-sm smooth-transition hover:scale-105 shadow-accent-glow mt-2">
+                                Masuk ke Akun
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            `;
+        }
+
+        let activeAuthMode = 'signin';
+
+        function toggleAuthForm(mode) {
+            activeAuthMode = mode;
+            const btnSignin = document.getElementById('btn-tab-signin');
+            const btnSignup = document.getElementById('btn-tab-signup');
+            const signupFields = document.getElementById('signup-fields');
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            if (mode === 'signin') {
+                btnSignin.className = "w-1/2 text-center pb-2 text-sm font-extrabold border-b-2 border-brand-primary text-brand-primary smooth-transition";
+                btnSignup.className = "w-1/2 text-center pb-2 text-sm font-semibold text-brand-textSecondary hover:text-brand-primary smooth-transition";
+                signupFields.classList.add('hidden');
+                submitBtn.innerText = "Masuk ke Akun";
+            } else {
+                btnSignup.className = "w-1/2 text-center pb-2 text-sm font-extrabold border-b-2 border-brand-primary text-brand-primary smooth-transition";
+                btnSignin.className = "w-1/2 text-center pb-2 text-sm font-semibold text-brand-textSecondary hover:text-brand-primary smooth-transition";
+                signupFields.classList.remove('hidden');
+                submitBtn.innerText = "Daftarkan Akun Baru";
+            }
+        }
+
+        async function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memproses...`;
+
+            if (activeAuthMode === 'signin') {
+                const { data, error } = await db.auth.signInWithPassword({ email, password });
+                if (error) {
+                    showAlertModal("Sign In Gagal", error.message);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Masuk ke Akun";
+                } else {
+                    currentUser = data.user;
+                    await fetchUserProfile();
+                    await fetchUserFavorites();
+                    renderAuthStateHeader();
+                    showAlertModal("Sign In Berhasil", "Selamat datang kembali di portal AyoRental!");
+                    window.location.hash = '#/';
+                }
+            } else {
+                const fullName = document.getElementById('auth-fullname').value || email.split('@')[0];
+                const { data, error } = await db.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: { full_name: fullName }
+                    }
+                });
+                
+                if (error) {
+                    showAlertModal("Sign Up Gagal", error.message);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Daftarkan Akun Baru";
+                } else {
+                    showAlertModal("Daftar Berhasil", "Akun AyoRental berhasil dibuat. Anda langsung login otomatis.");
+                    currentUser = data.user;
+                    await fetchUserProfile();
+                    await fetchUserFavorites();
+                    renderAuthStateHeader();
+                    window.location.hash = '#/';
+                }
+            }
+        }
+
+        // RENDER VIEW: SELLER DASHBOARD
+        async function renderDashboardSellerView(appContainer) {
+            if (!currentUser) {
+                appContainer.innerHTML = `
+                    <section class="py-20 bg-gray-50 flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+                        <div class="text-6xl text-brand-primary"><i class="fa-solid fa-lock"></i></div>
+                        <h3 class="text-xl font-bold text-brand-textPrimary">Autentikasi Diperlukan</h3>
+                        <p class="text-sm text-brand-textSecondary max-w-sm text-center">Silakan melakukan Sign In terlebih dahulu untuk mengakses menu listing penjualan mobil.</p>
+                        <a href="#/login" class="bg-brand-primary text-white font-bold py-3 px-8 rounded-lg text-sm smooth-transition hover:scale-105 shadow-accent-glow">Sign In Sekarang</a>
+                    </section>
+                `;
+                return;
+            }
+
+            const { data: myCars, error } = await db.from('cars').select('*').eq('seller_id', currentUser.id);
+
+            appContainer.innerHTML = `
+                <section class="py-12 bg-gray-50 border-b border-brand-border">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
+                            
+                            <!-- Left: List Car Form submission box -->
+                            <div class="lg:col-span-4 bg-white border border-brand-border rounded-2xl p-6 shadow-premium space-y-4 h-fit">
+                                <h3 class="text-xl font-extrabold text-brand-textPrimary">List Your Car</h3>
+                                <p class="text-xs text-brand-textSecondary leading-relaxed">Masukkan detail deskripsi mobil premium Anda langsung ke sistem pencarian global kami secara instan.</p>
+                                
+                                <form id="add-listing-form" class="space-y-4 pt-2" onsubmit="handleNewListingSubmit(event)">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Make / Merk</label>
+                                            <input type="text" id="car-make" required class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="Contoh: BMW">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Model</label>
+                                            <input type="text" id="car-model" required class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="330i xDrive">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Year</label>
+                                            <input type="number" id="car-year" required class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="2021">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Price ($)</label>
+                                            <input type="number" id="car-price" required class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="26900">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Mileage (mi)</label>
+                                            <input type="number" id="car-mileage" required class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="28500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Location</label>
+                                            <input type="text" id="car-location" required class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="Jakarta, ID / New York">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Transmisi</label>
+                                            <select id="car-transmission" class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none">
+                                                <option>Auto</option>
+                                                <option>Manual</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Bahan Bakar</label>
+                                            <select id="car-fuel" class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none">
+                                                <option>Gas</option>
+                                                <option>Electric</option>
+                                                <option>Hybrid</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Body Type</label>
+                                            <select id="car-body" class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none">
+                                                <option>Sedan</option>
+                                                <option>SUV</option>
+                                                <option>Truck</option>
+                                                <option>Coupe</option>
+                                                <option>Hatchback</option>
+                                                <option>Convertible</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-brand-textSecondary tracking-wider mb-1">Image URL</label>
+                                            <input type="url" id="car-image" class="w-full p-2.5 bg-gray-50 border border-brand-border rounded-lg text-sm outline-none" placeholder="https://image-link.com" value="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=600">
+                                        </div>
+                                    </div>
+                                    <button type="submit" id="car-submit-btn" class="w-full bg-brand-primary hover:bg-[#0043a4] text-white font-extrabold py-3 rounded-lg text-sm smooth-transition shadow-accent-glow">
+                                        Publikasikan Mobil
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Right: Manage Existing Listings List of Active Cars -->
+                            <div class="lg:col-span-8 space-y-6">
+                                <div class="bg-white border border-brand-border rounded-2xl p-6 shadow-premium">
+                                    <h3 class="text-xl font-extrabold text-brand-textPrimary mb-4">Kelola Penjualan Anda</h3>
+                                    
+                                    <div class="space-y-4" id="seller-cars-list-container">
+                                        ${myCars?.length === 0 ? `
+                                            <div class="py-12 text-center text-brand-textSecondary">
+                                                <i class="fa-solid fa-folder-open text-4xl mb-3 text-gray-300"></i>
+                                                <p class="text-sm font-semibold">Anda belum memiliki listing penjualan aktif.</p>
+                                                <p class="text-xs max-w-xs mx-auto mt-1">Gunakan formulir di samping untuk menambahkan mobil premium pertama Anda.</p>
+                                            </div>
+                                        ` : myCars.map(car => `
+                                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border border-brand-border rounded-xl hover:bg-gray-50/50 smooth-transition">
+                                                <div class="flex items-center gap-4 w-full sm:w-auto">
+                                                    <img src="${car.image_url}" alt="" class="w-16 h-16 rounded-lg object-cover" onerror="this.src='https://placehold.co/150x150/e2e8f0/0f172a?text=Premium'">
+                                                    <div class="text-left">
+                                                        <h4 class="font-extrabold text-brand-textPrimary text-base">${car.year} ${car.make} ${car.model}</h4>
+                                                        <p class="text-xs text-brand-textSecondary">${car.location} • $${parseFloat(car.price).toLocaleString()} • ${car.body_type}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                                    <button onclick="window.location.hash='#/listing/${car.id}'" class="p-2.5 bg-gray-100 hover:bg-gray-200 text-brand-textPrimary rounded-lg text-xs font-bold smooth-transition">View Detail</button>
+                                                    <button onclick="deleteListingAction('${car.id}')" class="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold smooth-transition">Hapus</button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        async function handleNewListingSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('car-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Mempublikasikan...`;
+
+            const payload = {
+                seller_id: currentUser.id,
+                make: document.getElementById('car-make').value,
+                model: document.getElementById('car-model').value,
+                year: parseInt(document.getElementById('car-year').value),
+                price: parseFloat(document.getElementById('car-price').value),
+                mileage: parseInt(document.getElementById('car-mileage').value),
+                location: document.getElementById('car-location').value,
+                transmission: document.getElementById('car-transmission').value,
+                fuel_type: document.getElementById('car-fuel').value,
+                body_type: document.getElementById('car-body').value,
+                image_url: document.getElementById('car-image').value || 'https://placehold.co/600x400/e2e8f0/0f172a?text=Premium+Car'
+            };
+
+            const { data, error } = await db.from('cars').insert(payload);
+            if (error) {
+                showAlertModal("Gagal Mempublikasikan", error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Publikasikan Mobil";
+            } else {
+                showAlertModal("Berhasil Dipublikasikan", "Selamat! Mobil premium Anda berhasil diterbitkan ke katalog AyoRental.");
+                await fetchAllCars();
+                router();
+            }
+        }
+
+        async function deleteListingAction(carId) {
+            const doubleCheck = confirm("Apakah Anda yakin ingin menghapus listing mobil premium ini?");
+            if (!doubleCheck) return;
+
+            const { error } = await db.from('cars').delete().eq('id', carId).eq('seller_id', currentUser.id);
+            if (error) {
+                showAlertModal("Error", error.message);
+            } else {
+                showAlertModal("Berhasil Dihapus", "Listing mobil premium berhasil dihapus secara permanen.");
+                await fetchAllCars();
+                router();
+            }
+        }
+
+        // RENDER VIEW: FAVORITES PAGE
+        async function renderFavoritesView(appContainer) {
+            if (!currentUser) {
+                window.location.hash = "#/login";
+                return;
+            }
+
+            const { data: favorited, error } = await db.from('favorites').select('cars(*)').eq('user_id', currentUser.id);
+
+            appContainer.innerHTML = `
+                <section class="py-12 bg-white min-h-[70vh]">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="text-left mb-8">
+                            <h2 class="text-3xl font-extrabold text-brand-textPrimary tracking-tight">Your Saved Cars</h2>
+                            <p class="text-brand-textSecondary text-sm mt-1">Daftar mobil premium AyoRental yang telah Anda simpan</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                            ${!favorited || favorited.length === 0 ? `
+                                <div class="col-span-full py-16 text-center text-brand-textSecondary space-y-4">
+                                    <div class="text-5xl text-gray-300"><i class="fa-regular fa-heart"></i></div>
+                                    <h4 class="text-lg font-bold text-brand-textPrimary">Belum Ada Favorit</h4>
+                                    <p class="text-sm max-w-sm mx-auto">Mulai tambahkan mobil favorit Anda dari katalog halaman depan.</p>
+                                    <a href="#/" class="inline-block bg-brand-primary text-white font-bold py-2.5 px-6 rounded-lg text-xs smooth-transition">Explore Catalog</a>
+                                </div>
+                            ` : favorited.map(item => {
+                                const car = item.cars;
+                                if (!car) return '';
+                                return `
+                                    <div class="bg-white rounded-2xl border border-brand-border/80 overflow-hidden shadow-premium hover:shadow-hover-card hover:-translate-y-1.5 smooth-transition text-left flex flex-col justify-between">
+                                        <div class="relative cursor-pointer" onclick="window.location.hash='#/listing/${car.id}'">
+                                            <img src="${car.image_url}" alt="${car.make} ${car.model}" class="w-full h-44 object-cover" onerror="this.src='https://placehold.co/400x300/e2e8f0/0f172a?text=${car.make}'">
+                                            <button onclick="event.stopPropagation(); toggleFavoriteAction('${car.id}')" class="absolute top-3 right-3 bg-white hover:bg-white text-red-500 p-2.5 rounded-full shadow-premium smooth-transition hover:scale-110">
+                                                <i class="fa-solid fa-heart text-red-500"></i>
+                                            </button>
+                                        </div>
+                                        <div class="p-4 flex-1 flex flex-col justify-between">
+                                            <div class="cursor-pointer" onclick="window.location.hash='#/listing/${car.id}'">
+                                                <span class="text-xs font-bold text-brand-textSecondary">${car.year} ${car.make}</span>
+                                                <h3 class="font-extrabold text-brand-textPrimary text-base mt-0.5 line-clamp-1">${car.model}</h3>
+                                                <div class="text-brand-primary font-extrabold text-lg mt-2">$${parseFloat(car.price).toLocaleString()}</div>
+                                            </div>
+                                            <div class="border-t border-gray-100 pt-3 mt-4 space-y-2 text-xs text-brand-textSecondary font-medium">
+                                                <div class="flex justify-between">
+                                                    <span><i class="fa-solid fa-gauge-high mr-1"></i> ${parseInt(car.mileage).toLocaleString()} mi</span>
+                                                    <span><i class="fa-solid fa-gears mr-1"></i> ${car.transmission}</span>
+                                                    <span><i class="fa-solid fa-gas-pump mr-1"></i> ${car.fuel_type}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        // RENDER VIEW: LISTING DETAILS PAGE
+        async function renderListingDetailView(appContainer, path) {
+            const carId = path.split("/")[2];
+            if (!carId) {
+                renderNotFoundView(appContainer);
+                return;
+            }
+
+            const { data: car, error } = await db.from('cars').select('*, profiles(full_name)').eq('id', carId).single();
+            
+            if (error || !car) {
+                appContainer.innerHTML = `
+                    <section class="py-20 text-center space-y-4">
+                        <div class="text-5xl text-gray-300"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <h4 class="text-lg font-bold">Mobil Tidak Ditemukan</h4>
+                        <p class="text-sm text-brand-textSecondary">Listing mobil yang Anda cari mungkin telah ditutup atau dihapus oleh pemiliknya.</p>
+                        <a href="#/" class="inline-block bg-brand-primary text-white font-bold py-2 px-6 rounded-lg text-sm smooth-transition">Kembali ke Beranda</a>
+                    </section>
+                `;
+                return;
+            }
+
+            const isFav = userFavoritesList.includes(car.id);
+
+            appContainer.innerHTML = `
+                <section class="py-12 bg-gray-50 text-left">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        
+                        <!-- Back button navigation -->
+                        <div class="mb-8">
+                            <a href="#/browse" class="text-brand-primary font-bold text-sm hover:underline flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-left"></i> Kembali ke Katalog
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                            
+                            <!-- Left Block -->
+                            <div class="lg:col-span-8 space-y-6">
+                                <div class="bg-white rounded-3xl border border-brand-border overflow-hidden shadow-premium relative">
+                                    <img src="${car.image_url}" alt="" class="w-full h-[450px] object-cover" onerror="this.src='https://placehold.co/800x450/e2e8f0/0f172a?text=Car+Details'">
+                                    <button onclick="toggleFavoriteAction('${car.id}')" class="absolute top-4 right-4 bg-white/80 hover:bg-white text-gray-400 p-3 rounded-full shadow-premium smooth-transition">
+                                        <i class="fa-solid fa-heart ${isFav ? 'text-red-500' : ''} text-lg"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Specs details -->
+                                <div class="bg-white rounded-2xl border border-brand-border p-6 shadow-premium space-y-4">
+                                    <h3 class="text-xl font-extrabold text-brand-textPrimary">Spesifikasi Kendaraan</h3>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                                        <div class="p-4 bg-gray-50 rounded-xl border border-brand-border/60">
+                                            <p class="text-xs text-brand-textSecondary font-bold uppercase">Jarak Tempuh</p>
+                                            <p class="text-lg font-extrabold text-brand-textPrimary mt-1">${parseInt(car.mileage).toLocaleString()} miles</p>
+                                        </div>
+                                        <div class="p-4 bg-gray-50 rounded-xl border border-brand-border/60">
+                                            <p class="text-xs text-brand-textSecondary font-bold uppercase">Tipe Transmisi</p>
+                                            <p class="text-lg font-extrabold text-brand-textPrimary mt-1">${car.transmission}</p>
+                                        </div>
+                                        <div class="p-4 bg-gray-50 rounded-xl border border-brand-border/60">
+                                            <p class="text-xs text-brand-textSecondary font-bold uppercase">Bahan Bakar</p>
+                                            <p class="text-lg font-extrabold text-brand-textPrimary mt-1">${car.fuel_type}</p>
+                                        </div>
+                                        <div class="p-4 bg-gray-50 rounded-xl border border-brand-border/60">
+                                            <p class="text-xs text-brand-textSecondary font-bold uppercase">Tipe Bodi</p>
+                                            <p class="text-lg font-extrabold text-brand-textPrimary mt-1">${car.body_type}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Block -->
+                            <div class="lg:col-span-4 space-y-6">
+                                <div class="bg-white rounded-2xl border border-brand-border p-6 shadow-premium space-y-6">
+                                    <div class="space-y-1">
+                                        <span class="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">${car.year} Premium Catalog</span>
+                                        <h2 class="text-3xl font-extrabold text-brand-textPrimary leading-tight">${car.make} ${car.model}</h2>
+                                        <div class="flex items-center gap-1.5 text-xs text-brand-textSecondary mt-2">
+                                            <i class="fa-solid fa-location-dot"></i> <span>Lokasi unit: <strong>${car.location}</strong></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="border-t border-b border-gray-100 py-4 flex items-center justify-between">
+                                        <p class="text-sm font-bold text-brand-textSecondary">Harga Tunai</p>
+                                        <p class="text-3xl font-extrabold text-brand-primary">$${parseFloat(car.price).toLocaleString()}</p>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <button onclick="openFinancingModal('${car.id}')" class="w-full bg-brand-primary hover:bg-[#0043a4] text-white font-extrabold py-4 rounded-xl text-sm smooth-transition hover:scale-105 shadow-accent-glow flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-calculator"></i> Ajukan Aplikasi Kredit
+                                        </button>
+                                        <a href="tel:1234567" class="w-full border border-brand-border bg-white text-brand-textPrimary hover:bg-gray-50 font-bold py-3.5 rounded-xl text-sm smooth-transition flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-comment-dots"></i> Hubungi Customer Service
+                                        </a>
+                                    </div>
+
+                                    <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100 flex items-start gap-3">
+                                        <div class="text-brand-primary text-lg mt-0.5"><i class="fa-solid fa-user-tie"></i></div>
+                                        <div class="text-xs text-brand-textSecondary leading-relaxed text-left">
+                                            <p class="font-bold text-brand-textPrimary">Identitas Seller Terverifikasi</p>
+                                            <p class="mt-0.5">Mobil premium ini diposting secara resmi oleh <strong>${car.profiles?.full_name || 'Dealer AyoRental'}</strong>.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        async function handleFinancingSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.querySelector('#financing-form button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memproses Pengajuan...`;
+
+            if (!currentUser) {
+                showAlertModal("Autentikasi Diperlukan", "Silakan login terlebih dahulu sebelum mengajukan aplikasi kredit pembiayaan mobil.");
+                closeFinancingModal();
+                window.location.hash = "#/login";
+                return;
+            }
+
+            const payload = {
+                user_id: currentUser.id,
+                car_id: document.getElementById('finance-car-id').value || null,
+                full_name: document.getElementById('finance-name').value,
+                email: document.getElementById('finance-email').value,
+                phone: document.getElementById('finance-phone').value,
+                monthly_income: parseFloat(document.getElementById('finance-income').value),
+                status: 'pending'
+            };
+
+            const { data, error } = await db.from('financing_applications').insert(payload);
+            if (error) {
+                showAlertModal("Error Pengajuan", error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Ajukan Sekarang";
+            } else {
+                closeFinancingModal();
+                showAlertModal("Pengajuan Berhasil", "Aplikasi pembiayaan kredit AyoRental Anda berhasil dikirim! Tim kelayakan keuangan kami akan menghubungi Anda segera.");
+                document.getElementById('financing-form').reset();
+            }
+        }
+
+        function renderNotFoundView(appContainer) {
+            appContainer.innerHTML = `
+                <section class="py-20 text-center space-y-4">
+                    <div class="text-6xl text-brand-primary"><i class="fa-solid fa-compass"></i></div>
+                    <h3 class="text-xl font-bold">Halaman Tidak Ditemukan</h3>
+                    <p class="text-sm text-brand-textSecondary max-w-sm mx-auto">Tautan yang Anda cari mungkin telah rusak atau berpindah tempat.</p>
+                    <a href="#/" class="inline-block bg-brand-primary text-white font-bold py-2.5 px-6 rounded-lg text-sm smooth-transition">Kembali ke Beranda</a>
+                </section>
+            `;
+        }
+    </script>
+</body>
+</html>
