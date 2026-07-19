@@ -1,4 +1,4 @@
-# 🚗 AyoRental — Premium Car Marketplace & Rental Portal
+# 🚗 AyoRental | Premium Car Marketplace & Rental Portal
 
 AyoRental adalah platform all-in-one untuk pencarian, penyewaan, penjualan, dan simulasi pembiayaan mobil premium. Dibangun sebagai **Single Page Application (SPA)** dengan antarmuka modern, interaktif, dan terintegrasi penuh dengan backend real-time **Supabase**.
 
